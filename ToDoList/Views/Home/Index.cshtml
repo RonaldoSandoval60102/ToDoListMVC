@@ -1,0 +1,101 @@
+﻿@model TodoViewModel
+<div class="row justify-content-center">
+    <div class="col-xl-6 col-lg-8 col-md-8 col-sm-10">
+        <div class="mb-3">
+            <button id="addTaskButton" class="btn btn-success">Add New Task</button>
+        </div>
+
+        <div>
+            <table class="table">
+                <thead>
+                    <tr class="table-primary">
+                        <th scope="col">Name</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model.TodoList)
+                    {
+                        <tr>
+                            <td id="task_@task.Id">@task.Title</td>
+                            <td>
+                                <button type="button" class="btn btn-danger"
+                                    onClick="deleteTask('@task.Id')">Delete</button>
+                                <button type="button" class="btn btn-info"
+                                    onClick="updateTaskColor('@task.Id')">Update</button>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <div id="addTaskForm" style="display:none;">
+            <label for="taskName">Task Name:</label>
+            <input type="text" class="form-control" id="taskName" name="taskName" required>
+            <button type="button" class="btn btn-primary mt-2" onClick="addTask()">Add Task</button>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    $(document).ready(function () {
+        $('#addTaskButton').on('click', function () {
+            $('#addTaskForm').show();
+            $('#taskName').val('');
+        });
+    });
+
+    function addTask() {
+        var taskName = $('#taskName').val();
+        sendDataToServer('/Home/Add', { Title: taskName });
+        $('#addTaskForm').hide();
+    }
+
+    function deleteTask(id) {
+        sendDataToServer('/Home/Delete', { Id: id });
+    }
+
+    function updateTaskColor(id) {
+        $.ajax({
+            url: '/Home/Update',
+            type: 'POST',
+            data: { Id: id },
+            success: function (responseData) {
+                updateTaskColorOnUI(id);
+            },
+            error: function (error) {
+                console.log('Error:', error.responseText);
+            }
+        });
+    }
+
+    function updateTaskColorOnUI(id) {
+        var taskElement = $('#task_' + id);
+        var currentColor = taskElement.css('background-color');
+
+        if (currentColor === 'rgb(0, 128, 0)') {
+            taskElement.css('background-color', '');
+        } else {
+            taskElement.css('background-color', 'green');
+        }
+    }
+
+
+    function sendDataToServer(url, data) {
+        $.ajax({
+            url: url,
+            type: 'POST',
+            data: data,
+            success: function (responseData) {
+                location.reload();
+                $('#addTaskForm').hide();
+            },
+            error: function (error) {
+                console.log('Error:', error.responseText);
+            }
+        });
+    }
+</script>
